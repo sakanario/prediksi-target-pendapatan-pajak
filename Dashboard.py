@@ -6,7 +6,7 @@ import joblib
 from datetime import datetime,date
 from dateutil.relativedelta import relativedelta
 
-# Load the saved scaler
+# Load the saved scaler 
 scaler = joblib.load("scaler.joblib")
 
 # Load the saved model
