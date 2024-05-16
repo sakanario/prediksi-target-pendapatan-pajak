@@ -62,6 +62,18 @@ def render_chart(data,date_index):
 
     st.line_chart(line_chart_data, use_container_width=True)
     
+def render_multipe_line_chart(data,data2,date_index):
+
+    line_chart_data = pd.DataFrame({    
+        'date' : date_index,
+        'Prediksi': data,
+        'Realisasi':data2
+    })
+
+    line_chart_data = line_chart_data.rename(columns={'date':'index'}).set_index('index')
+
+    st.line_chart(line_chart_data, use_container_width=True, color=["#80C5FA", "#fc0303"])
+    
 def generate_all_data_chart(df):
     dates_string = df['date']
     dates_datetime = pd.to_datetime(dates_string, format='%m-%Y')
@@ -108,17 +120,15 @@ generate_all_data_chart(df)
 
         
 # Get start_date
-start_date = st.date_input("Pilih tanggal yang Ingin digunakan sebagai Acuan Prediksi",datetime.strptime("1-2022", "%m-%Y"))
+start_date = st.date_input("Pilih tanggal yang Ingin digunakan sebagai Acuan Prediksi",datetime.strptime("8-2014", "%m-%Y"))
 
-n_month = st.slider('Berapa bulan yang akan diprediksi?', 2, 24, 12)
+n_month = st.slider('Berapa bulan yang akan diprediksi?', 2, 60, 12)
 
 if st.button('Prediksi Sekarang!'):
     model_input_df = generateModelInputDataframe(start_date)
-    model_input_df
     
      # take the realisasi row
     realisasi = np.array(model_input_df['realisasi'])
-    realisasi
     
     # reshape the data
     input_data = realisasi.reshape(1,-1)
@@ -132,13 +142,21 @@ if st.button('Prediksi Sekarang!'):
 
     # scaled back the prediction into rupiah
     predict_result_scaled_back = scaler.inverse_transform(np.array(predict_result).reshape(1,-1))
-    predict_result_scaled_back[0]
     
     # Generate date_index
     date_index = generate_date_index(start_date,len(predict_result_scaled_back[0]))
-    date_index
+    data_index_string = convertDateIndexToFormatedString(date_index)
     
+    # Filter DataFrame berdasarkan list bulan-tahun
+    filtered_df = df[df['date'].isin(data_index_string)]
+    
+    st.divider()
+    
+    # Single Prediction Chart
     render_chart(predict_result_scaled_back[0],date_index)
+    
+    # Prediction Compared to Real Data
+    render_multipe_line_chart(predict_result_scaled_back[0],filtered_df['realisasi'],date_index)
     
 
 
