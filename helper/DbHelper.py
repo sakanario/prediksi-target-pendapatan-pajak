@@ -8,21 +8,29 @@ def initDb():
         s.close()
 
 def insertCsvToDb(df):
-    with conn.session as s:
-        # Iterasi DataFrame dan insert ke database
-        for index, row in df.iterrows():
-            realisasi = row['realisasi']  # int
-            tanggal = row['bulan-tahun']  # str
-            
-            # Lakukan insert dengan parameterized query
-            s.execute(
-                'INSERT OR REPLACE INTO t_realisasi (realisasi, date) VALUES (:realisasi, :tanggal);',
-                params=dict(realisasi=realisasi, tanggal=tanggal)
-            )
+    try:
+        with conn.session as s:
+            # Iterasi DataFrame dan insert ke database
+            for index, row in df.iterrows():
+                realisasi = row['realisasi']  # int
+                tanggal = row['bulan-tahun']  # str
+                
+                # Lakukan insert dengan parameterized query
+                s.execute(
+                    'INSERT OR REPLACE INTO t_realisasi (realisasi, date) VALUES (:realisasi, :tanggal);',
+                    params=dict(realisasi=realisasi, tanggal=tanggal)
+                )
 
-        # Menyimpan perubahan dan menutup koneksi
-        s.commit()
-        s.close()
+            # Menyimpan perubahan dan menutup koneksi
+            s.commit()
+            st.success('Berhasil Input Data', icon="✅")
+           
+    except Exception as e:
+        st.error(e)
+    finally:
+         s.close()
+            
+        
         
 def getAllData():
     return conn.query('select * from t_realisasi')
