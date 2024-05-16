@@ -87,7 +87,7 @@ def generate_all_data_chart(df):
 
     render_chart(df['realisasi'],date_index)
 
-def generateModelInputDataframe(start_date):
+def generateModelInputDataframe(start_date,df):
     # generate date index mundur kebelakang sebanyak 18 bulan
     date_index=generate_backward_date_index(start_date,18)
     
@@ -96,6 +96,8 @@ def generateModelInputDataframe(start_date):
     
     # Filter DataFrame berdasarkan list bulan-tahun
     filtered_df = df[df['date'].isin(formated_date_index)]
+    filtered_df
+    st.markdown(len(filtered_df))
     
     return filtered_df
 
@@ -115,91 +117,101 @@ def predict_for_n_month(data,n):
         input_data = tf.concat([input_data[:, 1:], prediction], axis=1)
 
     return predict_result
-        
-        
-df = getAllData()
-
-st.title('Sistem Prediksi Target Pendapatan Pajak Kendaraan Bermotor')
-st.subheader("Realisasi Pendapatan Pajak Kendaraan Bermotor")
-generate_all_data_chart(df)
 
 
-        
-# Get start_date
-st.divider()
-start_date = st.date_input("Pilih tanggal yang Ingin digunakan sebagai Acuan Prediksi",datetime.strptime("8-2014", "%m-%Y"))
+def main():
+    df = getAllData()
 
-n_month = st.slider('Berapa bulan yang akan diprediksi?', 2, 60, 12)
-
-if st.button('Prediksi Sekarang!'):
-    model_input_df = generateModelInputDataframe(start_date)
-    
-     # take the realisasi row
-    realisasi = np.array(model_input_df['realisasi'])
-    
-    # reshape the data
-    input_data = realisasi.reshape(1,-1)
-
-    # scale data
-    scaled_input_data = scaler.transform(np.array(input_data).reshape(-1,1))
-    scaled_input_data = scaled_input_data.reshape(1,-1)
-
-    # predicting
-    predict_result = predict_for_n_month(scaled_input_data,n_month)
-
-    # scaled back the prediction into rupiah
-    predict_result_scaled_back = scaler.inverse_transform(np.array(predict_result).reshape(1,-1))
-    
-    # Generate date_index
-    date_index = generate_date_index(start_date,len(predict_result_scaled_back[0]))
-    data_index_string = convertDateIndexToFormatedString(date_index)
-    
-    # Filter DataFrame berdasarkan list bulan-tahun
-    filtered_df = df[df['date'].isin(data_index_string)]
-    
+    st.title('Sistem Prediksi Target Pendapatan Pajak Kendaraan Bermotor')
+    st.subheader("Realisasi Pendapatan Pajak Kendaraan Bermotor")
+    generate_all_data_chart(df)
+            
+    # Get start_date
     st.divider()
-    
-    st.header('Hasil Prediksi')
-        
-    min_date = min(date_index).strftime("%m-%Y")
-    max_date = max(date_index).strftime("%m-%Y")
-    st.markdown("Berikut adalah hasil prediksi untuk {} bulan dari {} sampai {}:".format(n_month,min_date,max_date))
-    
-    prediksi_total = sum(predict_result_scaled_back[0])
-    realisasi_total = sum(filtered_df['realisasi'])
-    selisih = abs(prediksi_total - realisasi_total)
-    selisih_in_percent = round(selisih/realisasi_total * 100, 2)
-    
-    # Single Prediction Chart
-    render_chart(predict_result_scaled_back[0],date_index)
-    st.markdown("Berdasarkan hasil prediksi, diperkirakan total pendapatan pada {} bulan kedepan adalah sebesar Rp.{}.".format(n_month,"{:,.0f}".format(prediksi_total)))
-    
-    # Prediction Compared to Real Data  
-    st.divider()
-    st.header('Perbandingan Prediksi dengan Realisasi')
-    
-    render_multipe_line_chart(predict_result_scaled_back[0],filtered_df['realisasi'],date_index)
-    
-    
-    parameter = [
-        "Prediksi Total",
-        "Realisasi Total",
-        "Selisih Total",
-    ]
-    
-    value = [
-        "Rp.{}".format("{:,.0f}".format(prediksi_total)),
-        "Rp.{}".format("{:,.0f}".format(realisasi_total)),
-        "Rp.{} ({}%)".format("{:,.0f}".format(selisih),selisih_in_percent),
+    start_date = st.date_input("Pilih tanggal yang Ingin digunakan sebagai Acuan Prediksi",datetime.strptime("8-2014", "%m-%Y"))
 
-    ]
-    
-    detail = pd.DataFrame({    
-        'Parameter' : parameter,
-        'Value': value,
-    })
+    n_month = st.slider('Berapa bulan yang akan diprediksi?', 2, 60, 12)
+
+    if st.button('Prediksi Sekarang!'):
+        input_df = generateModelInputDataframe(start_date,df)
         
-    st.dataframe(detail, use_container_width=True)
+        # Handle Data Kurang
+        if input_df.empty or len(input_df) < 18:
+            st.error('Data tidak tersedia untuk tanggal acuan {}'.format(start_date), icon="🚨")
+            return
+        
+        # take the realisasi row
+        realisasi = np.array(input_df['realisasi'])
+        
+        # reshape the data
+        input_data = realisasi.reshape(1,-1)
+
+        # scale data
+        scaled_input_data = scaler.transform(np.array(input_data).reshape(-1,1))
+        scaled_input_data = scaled_input_data.reshape(1,-1)
+
+        # predicting
+        predict_result = predict_for_n_month(scaled_input_data,n_month)
+
+        # scaled back the prediction into rupiah
+        predict_result_scaled_back = scaler.inverse_transform(np.array(predict_result).reshape(1,-1))
+        
+        # Generate date_index
+        date_index = generate_date_index(start_date,len(predict_result_scaled_back[0]))
+        data_index_string = convertDateIndexToFormatedString(date_index)
+        
+        # Filter DataFrame berdasarkan list bulan-tahun
+        filtered_df = df[df['date'].isin(data_index_string)]
+        
+        st.divider()
+        
+        st.header('Hasil Prediksi')
+            
+        min_date = min(date_index).strftime("%m-%Y")
+        max_date = max(date_index).strftime("%m-%Y")
+        st.markdown("Berikut adalah hasil prediksi untuk {} bulan dari {} sampai {}:".format(n_month,min_date,max_date))
+        
+        prediksi_total = sum(predict_result_scaled_back[0])
+        realisasi_total = sum(filtered_df['realisasi'])
+        selisih = abs(prediksi_total - realisasi_total)
+        selisih_in_percent = round(selisih/realisasi_total * 100, 2)
+        
+        # Single Prediction Chart
+        render_chart(predict_result_scaled_back[0],date_index)
+        st.markdown("Berdasarkan hasil prediksi, diperkirakan total pendapatan pada {} bulan kedepan adalah sebesar Rp.{}.".format(n_month,"{:,.0f}".format(prediksi_total)))
+        
+        # Prediction Compared to Real Data  
+        st.divider()
+        st.header('Perbandingan Prediksi dengan Realisasi')
+        
+        render_multipe_line_chart(predict_result_scaled_back[0],filtered_df['realisasi'],date_index)
+        
+        
+        parameter = [
+            "Prediksi Total",
+            "Realisasi Total",
+            "Selisih Total",
+        ]
+        
+        value = [
+            "Rp.{}".format("{:,.0f}".format(prediksi_total)),
+            "Rp.{}".format("{:,.0f}".format(realisasi_total)),
+            "Rp.{} ({}%)".format("{:,.0f}".format(selisih),selisih_in_percent),
+
+        ]
+        
+        detail = pd.DataFrame({    
+            'Parameter' : parameter,
+            'Value': value,
+        })
+            
+        st.dataframe(detail, use_container_width=True)
+        
+
+main()
+        
+        
+
 
     
     
