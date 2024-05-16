@@ -165,15 +165,43 @@ if st.button('Prediksi Sekarang!'):
     max_date = max(date_index).strftime("%m-%Y")
     st.markdown("Berikut adalah hasil prediksi untuk {} bulan dari {} sampai {}:".format(n_month,min_date,max_date))
     
+    prediksi_total = sum(predict_result_scaled_back[0])
+    realisasi_total = sum(filtered_df['realisasi'])
+    selisih = abs(prediksi_total - realisasi_total)
+    selisih_in_percent = round(selisih/realisasi_total * 100, 2)
+    
     # Single Prediction Chart
     render_chart(predict_result_scaled_back[0],date_index)
-    st.markdown("Berdasarkan hasil prediksi, diperkirakan total pendapatan pada {} bulan kedepan adalah sebesar Rp.{}.".format(n_month,"{:,.0f}".format(sum(predict_result_scaled_back[0]))))
+    st.markdown("Berdasarkan hasil prediksi, diperkirakan total pendapatan pada {} bulan kedepan adalah sebesar Rp.{}.".format(n_month,"{:,.0f}".format(prediksi_total)))
     
-    # Prediction Compared to Real Data
+    # Prediction Compared to Real Data  
     st.divider()
     st.header('Perbandingan Prediksi dengan Realisasi')
     
     render_multipe_line_chart(predict_result_scaled_back[0],filtered_df['realisasi'],date_index)
+    
+    
+    parameter = [
+        "Prediksi Total",
+        "Realisasi Total",
+        "Selisih Total",
+    ]
+    
+    value = [
+        "Rp.{}".format("{:,.0f}".format(prediksi_total)),
+        "Rp.{}".format("{:,.0f}".format(realisasi_total)),
+        "Rp.{} ({}%)".format("{:,.0f}".format(selisih),selisih_in_percent),
+
+    ]
+    
+    detail = pd.DataFrame({    
+        'Parameter' : parameter,
+        'Value': value,
+    })
+        
+    st.dataframe(detail, use_container_width=True)
+
+    
     
     
     
