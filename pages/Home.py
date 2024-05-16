@@ -61,6 +61,7 @@ def render_chart(data,date_index):
     line_chart_data = line_chart_data.rename(columns={'date':'index'}).set_index('index')
 
     st.line_chart(line_chart_data, use_container_width=True)
+    st.dataframe(line_chart_data, use_container_width=True)
     
 def render_multipe_line_chart(data,data2,date_index):
 
@@ -69,10 +70,14 @@ def render_multipe_line_chart(data,data2,date_index):
         'Prediksi': data,
         'Realisasi':data2
     })
-
+    
     line_chart_data = line_chart_data.rename(columns={'date':'index'}).set_index('index')
 
+    # line chart 
     st.line_chart(line_chart_data, use_container_width=True, color=["#80C5FA", "#fc0303"])
+    
+    # tabel
+    st.dataframe(line_chart_data, use_container_width=True)
     
 def generate_all_data_chart(df):
     dates_string = df['date']
@@ -118,8 +123,10 @@ st.title('Sistem Prediksi Target Pendapatan Pajak Kendaraan Bermotor')
 st.subheader("Realisasi Pendapatan Pajak Kendaraan Bermotor")
 generate_all_data_chart(df)
 
+
         
 # Get start_date
+st.divider()
 start_date = st.date_input("Pilih tanggal yang Ingin digunakan sebagai Acuan Prediksi",datetime.strptime("8-2014", "%m-%Y"))
 
 n_month = st.slider('Berapa bulan yang akan diprediksi?', 2, 60, 12)
@@ -152,11 +159,23 @@ if st.button('Prediksi Sekarang!'):
     
     st.divider()
     
+    st.header('Hasil Prediksi')
+        
+    min_date = min(date_index).strftime("%m-%Y")
+    max_date = max(date_index).strftime("%m-%Y")
+    st.markdown("Berikut adalah hasil prediksi untuk {} bulan dari {} sampai {}:".format(n_month,min_date,max_date))
+    
     # Single Prediction Chart
     render_chart(predict_result_scaled_back[0],date_index)
+    st.markdown("Berdasarkan hasil prediksi, diperkirakan total pendapatan pada {} bulan kedepan adalah sebesar Rp.{}.".format(n_month,"{:,.0f}".format(sum(predict_result_scaled_back[0]))))
     
     # Prediction Compared to Real Data
+    st.divider()
+    st.header('Perbandingan Prediksi dengan Realisasi')
+    
     render_multipe_line_chart(predict_result_scaled_back[0],filtered_df['realisasi'],date_index)
+    
+    
     
 
 
