@@ -23,3 +23,23 @@ def catch_uploaded_csv():
         # Button Upload
         if st.button('Input Data!'): 
             insertCsvToDb(df)
+            
+            
+            
+def generate_btn_download_sample():
+    # Define the path to the file
+    file_path = "static/input_data.csv"
+
+    # Read the file contents
+    with open(file_path, "rb") as file:
+        file_bytes = file.read()
+
+    # Define the file name for the download
+    file_name = "sample.csv"
+
+    st.download_button(
+        label="Download Template Unggah File Data",
+        data=file_bytes,
+        file_name=file_name,
+        mime="text/plain"
+    )
