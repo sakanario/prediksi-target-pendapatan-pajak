@@ -15,6 +15,13 @@ st.markdown("Data Realisasi yang Tersimpan di Sistem:")
 t_realisasi = getAllData()
 st.dataframe(t_realisasi, use_container_width=True)
 
+# Download Sample
+generate_btn_download_sample()
+
+
+# Form Upload CSV
+catch_uploaded_csv()
+
 # Panduan
 st.subheader("Panduan untuk Menginput Data via Upload CSV")
 st.markdown("1. Unduh Template CSV: Mulailah dengan mengunduh template unggah file data yang telah disediakan oleh sistem. Template ini memastikan format data sesuai dengan yang dibutuhkan." )
@@ -29,10 +36,5 @@ st.markdown("- Pilih File CSV: Klik tombol untuk memilih file dari komputer Anda
 st.markdown("- Unggah File: Klik tombol unggah untuk memulai proses unggah file ke sistem.")
 st.markdown("- Jika pada file yang diunggah terdapat bulan-tahun yang sudah ada dalam sistem, maka sistem akan secara otomatis menggantikan data tersebut dengan data baru yang diunggah.")
 
-# Download Sample
-generate_btn_download_sample()
 
-
-# Form Upload CSV
-catch_uploaded_csv()
     
